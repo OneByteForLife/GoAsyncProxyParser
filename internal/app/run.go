@@ -1,8 +1,8 @@
 package app
 
 import (
-	"GoProxyService/internal/config"
-	"GoProxyService/internal/models"
+	"GoAsyncProxyParser/internal/config"
+	"GoAsyncProxyParser/internal/models"
 	"sync"
 )
 
