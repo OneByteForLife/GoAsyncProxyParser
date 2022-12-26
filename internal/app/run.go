@@ -3,15 +3,32 @@ package app
 import (
 	"GoProxyService/internal/config"
 	"GoProxyService/internal/models"
-	"fmt"
-	"strconv"
+	"sync"
 )
 
 func Run() {
 	conf := config.ReadConfig()
-	for i := 1; i <= 15; i++ {
-		models.CollectingProxies(fmt.Sprintf("https://proxylist.geonode.com/api/proxy-list?limit=500&page=%s", strconv.Itoa(i)))
-	}
+	var wg sync.WaitGroup
 
+	// for i := 1; i <= 1; i++ {
+
+	// }
+
+	wg.Add(3)
+	go func() {
+		models.CollectingProxies("https://proxylist.geonode.com/api/proxy-list?limit=500&page=1")
+		wg.Done()
+	}()
+
+	go func() {
+		models.CollectingProxies("https://proxylist.geonode.com/api/proxy-list?limit=500&page=2")
+		wg.Done()
+	}()
+
+	go func() {
+		models.CollectingProxies("https://proxylist.geonode.com/api/proxy-list?limit=500&page=3")
+		wg.Done()
+	}()
+	wg.Wait()
 	models.SendingData(conf.OutServiceURL, conf.JwtToken)
 }

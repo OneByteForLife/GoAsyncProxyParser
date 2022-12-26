@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	gojson "github.com/goccy/go-json"
 	"github.com/sirupsen/logrus"
@@ -13,8 +14,7 @@ import (
 /*
 	Алгоритм прост
 	1 - Собираем прокси
-	2 - Проверяем их на валидность
-	3 - Отправляем в другой сервис
+	2 - Отправляем в другой сервис
 */
 
 type SourceData struct {
@@ -45,8 +45,9 @@ type ModedData struct {
 
 var data []ModedData
 
-// Сбор прокси
+// Сбор прокси с ресурса
 func CollectingProxies(source string) {
+	logrus.Infof("Page ->> %s", source[len(source)-1:])
 	resp, err := http.Get(source)
 	if err != nil {
 		logrus.Errorf("Err request to source - %s", err)
@@ -55,7 +56,8 @@ func CollectingProxies(source string) {
 
 	if resp.StatusCode != http.StatusOK {
 		logrus.Warnf("Problems on the resource side - %d", resp.StatusCode)
-		return
+		time.Sleep(time.Second * 10)
+		CollectingProxies(source)
 	}
 
 	body, err := io.ReadAll(resp.Body)
@@ -99,6 +101,7 @@ func CollectingProxies(source string) {
 	}
 }
 
+// Отправка результатов в другой сервис
 func SendingData(service string, token string) {
 	client := &http.Client{}
 
@@ -127,10 +130,12 @@ func SendingData(service string, token string) {
 
 	if resp.StatusCode != http.StatusOK {
 		logrus.Warnf("Proxy service returning status - %d", resp.StatusCode)
+		return
 	}
 
 	if resp.StatusCode == http.StatusUnauthorized {
 		logrus.Warnf("Check jwt token - %d", resp.StatusCode)
+		return
 	}
 
 	logrus.Info("Success sending data")
