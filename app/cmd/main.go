@@ -3,6 +3,7 @@ package main
 import (
 	"GoProxyService/internal/app"
 	"GoProxyService/pkg"
+	"time"
 )
 
 func init() {
@@ -10,5 +11,9 @@ func init() {
 }
 
 func main() {
-	app.Run()
+	for {
+		timer1 := time.NewTimer(3 * time.Hour)
+		<-timer1.C
+		app.Run()
+	}
 }
