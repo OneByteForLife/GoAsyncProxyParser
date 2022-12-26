@@ -1,8 +1,8 @@
 package main
 
 import (
-	"GoProxyService/internal/app"
-	"GoProxyService/pkg"
+	"GoAsyncProxyParser/internal/app"
+	"GoAsyncProxyParser/pkg"
 	"time"
 )
 

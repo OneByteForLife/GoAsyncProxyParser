@@ -1,4 +1,4 @@
-module GoProxyService
+module GoAsyncProxyParser
 
 go 1.19
 
