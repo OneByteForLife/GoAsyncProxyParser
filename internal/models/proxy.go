@@ -1,10 +1,12 @@
 package models
 
 import (
+	"bytes"
 	"fmt"
+	"io"
+	"net/http"
 
 	gojson "github.com/goccy/go-json"
-	"github.com/gofiber/fiber/v2"
 	"github.com/sirupsen/logrus"
 )
 
@@ -45,22 +47,27 @@ var data []ModedData
 
 // Сбор прокси
 func CollectingProxies(source string) {
-	agent := fiber.Get(source)
+	resp, err := http.Get(source)
+	if err != nil {
+		logrus.Errorf("Err request to source - %s", err)
+	}
+	defer resp.Body.Close()
 
-	status, body, errs := agent.Bytes()
-	if errs != nil {
-		logrus.Errorf("Err request to source - %s", errs[0])
+	if resp.StatusCode != http.StatusOK {
+		logrus.Warnf("Problems on the resource side - %d", resp.StatusCode)
 		return
 	}
 
-	if status != fiber.StatusOK {
-		logrus.Warnf("Problems on the resource side - %d", status)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		logrus.Errorf("Err read body - %s", err)
 		return
 	}
 
 	var s SourceData
 	if err := gojson.Unmarshal(body, &s); err != nil {
 		logrus.Errorf("Err unmarshal source data to struct - %s", err)
+		return
 	}
 
 	for _, val := range s.Data {
@@ -92,27 +99,39 @@ func CollectingProxies(source string) {
 	}
 }
 
-func SendingData(service string, token string) bool {
-	agent := fiber.AcquireAgent()
-	req := agent.Request()
+func SendingData(service string, token string) {
+	client := &http.Client{}
 
-	req.Header.SetMethod(fiber.MethodPost)
-	req.SetRequestURI(service)
-
-	req.Header.SetMethod(fiber.MethodPost)
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
-
-	agent.JSON(data)
-
-	status, _, errs := agent.Bytes()
-	if errs != nil {
-		logrus.Errorf("Err request to service - %s", errs[0])
-		return false
+	out, err := gojson.Marshal(&data)
+	if err != nil {
+		logrus.Errorf("Err marshal data from payload - %s", err)
+		return
 	}
 
-	if status != fiber.StatusOK {
-		logrus.Warnf("Something went wrong - %d", status)
-		return false
+	req, err := http.NewRequest(http.MethodPost, service, bytes.NewReader(out))
+	if err != nil {
+		logrus.Errorf("Err generation request from proxy service - %s", err)
+		return
 	}
-	return true
+
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
+
+	resp, err := client.Do(req)
+	if err != nil {
+		logrus.Errorf("Err sending data to proxy service - %s", err)
+		return
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		logrus.Warnf("Proxy service returning status - %d", resp.StatusCode)
+	}
+
+	if resp.StatusCode == http.StatusUnauthorized {
+		logrus.Warnf("Check jwt token - %d", resp.StatusCode)
+	}
+
+	logrus.Info("Success sending data")
 }
