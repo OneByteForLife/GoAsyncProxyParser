@@ -10,10 +10,6 @@ func Run() {
 	conf := config.ReadConfig()
 	var wg sync.WaitGroup
 
-	// for i := 1; i <= 1; i++ {
-
-	// }
-
 	wg.Add(3)
 	go func() {
 		models.CollectingProxies("https://proxylist.geonode.com/api/proxy-list?limit=500&page=1")

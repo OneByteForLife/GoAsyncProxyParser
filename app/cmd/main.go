@@ -3,7 +3,6 @@ package main
 import (
 	"GoAsyncProxyParser/internal/app"
 	"GoAsyncProxyParser/pkg"
-	"time"
 )
 
 func init() {
@@ -11,9 +10,5 @@ func init() {
 }
 
 func main() {
-	for {
-		timer1 := time.NewTimer(3 * time.Hour)
-		<-timer1.C
-		app.Run()
-	}
+	app.Run()
 }
