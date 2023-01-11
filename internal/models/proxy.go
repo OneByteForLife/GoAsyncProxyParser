@@ -47,16 +47,28 @@ var data []ModedData
 
 // Сбор прокси с ресурса
 func CollectingProxies(source string) {
-	logrus.Infof("Page ->> %s", source[len(source)-1:])
-	resp, err := http.Get(source)
+	client := &http.Client{}
+	logrus.Infof("Page -> %s", source)
+
+	req, err := http.NewRequest(http.MethodGet, source, nil)
 	if err != nil {
-		logrus.Errorf("Err request to source - %s", err)
+		logrus.Errorf("Err generation request from proxy service - %s", err)
+		return
+	}
+
+	req.Header.Add("Host", "proxylist.geonode.com")
+	req.Header.Add("User-Agent", "PostmanRuntime/7.30.0")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		logrus.Errorf("Err sending data to proxy service - %s", err)
+		return
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		logrus.Warnf("Problems on the resource side - %d", resp.StatusCode)
-		time.Sleep(time.Second * 10)
+		time.Sleep(time.Second * 5)
 		CollectingProxies(source)
 	}
 
@@ -67,6 +79,7 @@ func CollectingProxies(source string) {
 	}
 
 	var s SourceData
+
 	if err := gojson.Unmarshal(body, &s); err != nil {
 		logrus.Errorf("Err unmarshal source data to struct - %s", err)
 		return
