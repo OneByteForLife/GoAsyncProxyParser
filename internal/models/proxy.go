@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"time"
 
 	gojson "github.com/goccy/go-json"
 	"github.com/sirupsen/logrus"
@@ -68,7 +67,6 @@ func CollectingProxies(source string) {
 
 	if resp.StatusCode != http.StatusOK {
 		logrus.Warnf("Problems on the resource side - %d", resp.StatusCode)
-		time.Sleep(time.Second * 5)
 		CollectingProxies(source)
 	}
 
@@ -79,7 +77,6 @@ func CollectingProxies(source string) {
 	}
 
 	var s SourceData
-
 	if err := gojson.Unmarshal(body, &s); err != nil {
 		logrus.Errorf("Err unmarshal source data to struct - %s", err)
 		return

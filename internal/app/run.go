@@ -18,21 +18,21 @@ func Run() {
 
 	go func() {
 		models.CollectingProxies("https://proxylist.geonode.com/api/proxy-list?limit=500&page=2&sort_by=lastChecked")
-		defer wg.Done()
+		wg.Done()
 	}()
 
 	go func() {
 		models.CollectingProxies("https://proxylist.geonode.com/api/proxy-list?limit=500&page=3&sort_by=lastChecked")
-		defer wg.Done()
+		wg.Done()
 	}()
 	go func() {
 		models.CollectingProxies("https://proxylist.geonode.com/api/proxy-list?limit=500&page=4&sort_by=lastChecked")
-		defer wg.Done()
+		wg.Done()
 	}()
 
 	go func() {
 		models.CollectingProxies("https://proxylist.geonode.com/api/proxy-list?limit=500&page=5&sort_by=lastChecked")
-		defer wg.Done()
+		wg.Done()
 	}()
 	wg.Wait()
 
