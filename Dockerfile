@@ -5,7 +5,7 @@ WORKDIR /service
 COPY . .
 
 RUN go mod tidy && \
-    CGO_ENABLED=0 GOOS=linux go build -ldflags '-extldflags "-static"' -o /go-proxy-parcer ./app/cmd/main.go
+    CGO_ENABLED=0 GOOS=linux go build -ldflags '-extldflags "-static"' -o /go-proxy-parcer ./cmd/app/main.go
 
 
 FROM alpine:3.10
